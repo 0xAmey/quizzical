@@ -1,0 +1,219 @@
+import { nanoid } from "nanoid"
+import { useEffect, useState } from "react"
+import "./Questions.css"
+
+function Question(props) {
+    const [options, setOptions] = useState([])
+
+    function decodeEntities(s) {
+        let str,
+            temp = document.createElement("p")
+        temp.innerHTML = s
+        str = temp.textContent || temp.innerText
+        temp = null
+        return str
+    }
+
+    function shuffleArray(arr) {
+        return arr.sort(() => Math.random() - 0.5)
+    }
+
+    useEffect(() => {
+        setOptions(() => {
+            let arr = []
+            for (let i = 0; i < 3; i++) {
+                arr.push(props.incorrectAnswers[i])
+            }
+            arr.push(props.correctAnswer)
+
+            arr = shuffleArray(arr)
+
+            arr = arr.map((option) => {
+                return {
+                    id: nanoid(),
+                    text: decodeEntities(option),
+                    isSelected: false,
+                }
+            })
+
+            return arr
+        })
+    }, [])
+
+    function selectOption(id) {
+        setOptions((oldOptions) =>
+            oldOptions.map((element) => {
+                if (element.isSelected) {
+                    return { ...element, isSelected: false }
+                }
+                return element.id === id
+                    ? { ...element, isSelected: !element.isSelected }
+                    : element
+            })
+        )
+    }
+
+    const renderOptions = options.map((option) => {
+        return (
+            <button
+                key={option.id}
+                id={option.id}
+                className={
+                    option.isSelected
+                        ? "question--option-selected"
+                        : "question--option"
+                }
+                onClick={() => selectOption(option.id)}
+            >
+                {option.text}
+            </button>
+        )
+    })
+
+    return (
+        <div className="question">
+            <h2 className="question--head">{props.question}</h2>
+            <div className="question--options">{renderOptions}</div>
+            <hr className="question--line-break"></hr>
+        </div>
+    )
+}
+
+export default Question
+
+
+
+--------------------APP.JSX-------------------
+
+import React, { useEffect, useState } from "react"
+import "./App.css"
+import blobBottomLeft from "../assets/blobs-bottom-left.png"
+import blobTopRight from "../assets/blobs-top-right.png"
+import Question from "./Question"
+import { nanoid } from "nanoid"
+
+function App() {
+    function decodeEntities(s) {
+        let str,
+            temp = document.createElement("p")
+        temp.innerHTML = s
+        str = temp.textContent || temp.innerText
+        temp = null
+        return str
+    }
+
+    /*-----STATE-----*/
+    const [quizStart, setQuizStart] = useState(false)
+    const [questions, setQuestions] = useState([])
+    const [newGame, setNewGame] = useState(false)
+
+    
+
+    /*-----USEEFFECT-----*/
+    useEffect(() => {
+        fetch(
+            "https://opentdb.com/api.php?amount=5&category=18&difficulty=medium&type=multiple"
+        )
+            .then((res) => res.json())
+            .then((data) => {
+                setQuestions(generateQuestions(data.results))
+            })
+    }, [newGame, quizStart])
+
+    /*-----OTHER-----*/
+
+    function startQuiz() {
+        setQuizStart(true)
+    }
+
+    function generateQuestions(input) {
+        let arr = []
+        for (let i = 0; i < 5; i++) {
+            arr.push({
+                id: nanoid(),
+                text: input[i].question,
+                correctAnswer: input[i].correct_answer,
+                incorrectAnswers: input[i].incorrect_answers,
+            })
+        }
+        return arr
+    }
+
+    const renderQuestions = questions.map((question) => {
+        return (
+            <Question
+                key={question.id}
+                id={question.id}
+                question={decodeEntities(question.text)}
+                correctAnswer={question.correctAnswer}
+                incorrectAnswers={question.incorrectAnswers}
+            />
+        )
+    })
+
+    return quizStart ? (
+        <div className="quiz">
+            <div className="all-questions">{renderQuestions}</div>
+            <div className="check-answers">
+                <button className="check-answers-btn">Check Answers</button>
+            </div>
+        </div>
+    ) : (
+        <div className="landing">
+            <div className="blob-top-right">
+                <img src={blobTopRight}></img>
+            </div>
+            <div className="blob-bottom-left">
+                <img src={blobBottomLeft}></img>
+            </div>
+
+            <h1 className="landing--title">Quizzical</h1>
+            <p className="landing--description">Some description if needed</p>
+            <button
+                className="landing--start-quiz-btn"
+                onClick={() => startQuiz()}
+            >
+                Start Quiz
+            </button>
+        </div>
+    )
+}
+
+export default App
+
+
+className={
+                    
+                        : gameSubmit &&
+                          option.isSelected &&
+                          answers[index].isCorrect &&
+                          answers[index].userAnswer === option.text
+                        ? "option--correct"
+                        : gameSubmit &&
+                          option.isSelected &&
+                          !answers[index].isCorrect &&
+                          answers[index].userAnswer === option.text
+                        ? "option--wrong"
+                        : gameSubmit
+                        ? "option--not-selected"
+                        : ""
+                }
+
+
+if (!gameSubmit && optison.isSelected) {
+            allClassNames = "question--option-selected"
+        } else if (!gameSubmit && !option.isSelected) {
+            allClassNames = "question--option"
+        } else if (
+            answers[index].isCorrect &&
+            answers[index].userAnswer == option.text
+        ) {
+            allClassNames = "option--correct"
+        } else if (
+            !answers[index].isCorrect &&
+            answers[index].userAnswer == option.text
+        ) {
+            allClassNames = "option--wrong"
+        } else {
+            allClassNames = "option--not-selected"
+        }
